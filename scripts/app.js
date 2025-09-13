@@ -67,7 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 Object.values(assessments[fullDate]).forEach(item => {
                     const listItem = document.createElement('li');
                     listItem.className = 'assessment-entry';
-                    listItem.textContent = `${item.period}교시: ${item.subject}`;
+                    let itemHTML = `${item.period}교시: ${item.subject}`;
+                    if (item.imageUrl) {
+                        itemHTML += `<span class="photo-icon"></span>`;
+                    }
+                    listItem.innerHTML = itemHTML;
                     list.appendChild(listItem);
                 });
                 cell.appendChild(list);
@@ -101,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.entries(dataForDate).forEach(([id, item]) => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'item';
-            const imageHTML = item.imageUrl ? `<img src="${item.imageUrl}" class="item-image" alt="수행평가 이미지">` : '';
+            const imageHTML = (item && item.imageUrl) ? `<img src="${item.imageUrl}" class="item-image" alt="수행평가 이미지">` : '';
             itemDiv.innerHTML = `
                 <div class="content">
                     <p><span class="subject">${item.period}교시: ${item.subject}</span></p>
@@ -159,22 +163,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const saveBtn = document.getElementById('save-btn');
         saveBtn.disabled = true;
         saveBtn.textContent = '저장 중...';
-
         const assessmentId = hiddenAssessmentId.value;
         const file = imageInput.files[0];
-        
         const textData = {
             period: document.getElementById('assessment-period').value,
             subject: document.getElementById('assessment-subject').value,
             description: document.getElementById('assessment-description').value,
         };
-
         if (file) {
-            // ▼▼▼ ImgBB 이미지 업로드 로직 ▼▼▼
             const apiKey = "7385d2891d09a1eef32117615eae30b4";
             const formData = new FormData();
             formData.append('image', file);
-
             fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
                 method: 'POST',
                 body: formData,
@@ -182,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
-                    textData.imageUrl = data.display_url;
+                    textData.imageUrl = result.data.display_url;
                     saveDataToDatabase(assessmentId, textData);
                 } else {
                     throw new Error(result.error.message);
@@ -209,8 +208,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (target.classList.contains('delete-btn')) {
             if (confirm('정말 삭제하시겠습니까?')) {
-                // TODO: ImgBB에 올린 이미지를 삭제하는 기능은 유료 플랜에서만 제공되므로,
-                // 여기서는 데이터베이스의 정보만 삭제합니다.
                 database.ref(`assessments/${selectedDate}/${assessmentId}`).remove();
             }
         }
