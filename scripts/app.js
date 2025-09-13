@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
-                    textData.imageUrl = result.data.url;
+                    textData.imageUrl = data.display_url;
                     saveDataToDatabase(assessmentId, textData);
                 } else {
                     throw new Error(result.error.message);
