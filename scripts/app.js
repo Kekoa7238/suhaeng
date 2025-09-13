@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. Firebase 초기화 ---
+    // --- Firebase 초기화 ---
     const firebaseConfig = {
       apiKey: "AIzaSyCcMuN4tcOelecsMpDklhf5PSpfYh6-Z0M",
       authDomain: "suhaeng-82028.firebaseapp.com",
@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
-    const storage = firebase.storage();
     const assessmentsRef = database.ref('assessments');
 
     // --- DOM 요소 ---
@@ -160,28 +159,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const saveBtn = document.getElementById('save-btn');
         saveBtn.disabled = true;
         saveBtn.textContent = '저장 중...';
+
         const assessmentId = hiddenAssessmentId.value;
         const file = imageInput.files[0];
+        
         const textData = {
             period: document.getElementById('assessment-period').value,
             subject: document.getElementById('assessment-subject').value,
             description: document.getElementById('assessment-description').value,
         };
+
         if (file) {
-            const fileName = new Date().getTime() + '-' + file.name;
-            const storageRef = storage.ref('images/' + fileName);
-            storageRef.put(file)
-                .then(snapshot => snapshot.ref.getDownloadURL())
-                .then(downloadURL => {
-                    textData.imageUrl = downloadURL;
+            // ▼▼▼ ImgBB 이미지 업로드 로직 ▼▼▼
+            const apiKey = "7385d2891d09a1eef32117615eae30b4";
+            const formData = new FormData();
+            formData.append('image', file);
+
+            fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    textData.imageUrl = result.data.url;
                     saveDataToDatabase(assessmentId, textData);
-                })
-                .catch(error => {
-                    console.error("업로드 실패:", error);
-                    alert("이미지 업로드에 실패했습니다.");
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = '저장';
-                });
+                } else {
+                    throw new Error(result.error.message);
+                }
+            })
+            .catch(error => {
+                console.error("ImgBB 업로드 실패:", error);
+                alert("이미지 업로드에 실패했습니다: " + error.message);
+                saveBtn.disabled = false;
+                saveBtn.textContent = '저장';
+            });
         } else {
             saveDataToDatabase(assessmentId, textData);
         }
@@ -197,6 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (target.classList.contains('delete-btn')) {
             if (confirm('정말 삭제하시겠습니까?')) {
+                // TODO: ImgBB에 올린 이미지를 삭제하는 기능은 유료 플랜에서만 제공되므로,
+                // 여기서는 데이터베이스의 정보만 삭제합니다.
                 database.ref(`assessments/${selectedDate}/${assessmentId}`).remove();
             }
         }
