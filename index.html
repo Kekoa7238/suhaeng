@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2학년 10반 수행평가 및 일정</title>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --border-color: #ddd;
+            --warning-color: #ffc107;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 20px auto; /* 위쪽 여백 추가 */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 0;
+        }
+
+        .fonted {
+            font-family: 'Paperozi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-weight: 700;
+        }
+
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .calendar-header button { background: none; border: 1px solid var(--border-color); border-radius: 5px; padding: 5px 15px; cursor: pointer; font-size: 16px; }
+        .calendar-header h2 { margin: 0; font-size: 24px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .day-name { font-weight: bold; text-align: center; padding: 10px; background-color: #f8f9fa; }
+        .day-cell { border: 1px solid var(--border-color); min-height: 120px; padding: 5px; position: relative; cursor: pointer; transition: background-color 0.2s; }
+        .day-cell:hover { background-color: #f0f8ff; }
+        .day-cell.other-month { color: #aaa; background-color: #f9f9f9; }
+        .day-cell.today { background-color: #fffbe6; border: 1px solid var(--warning-color); }
+        .date-number { font-size: 14px; font-weight: bold; }
+        .assessments-on-day { list-style: none; padding: 0; margin-top: 5px; }
+        .assessment-entry { font-size: 12px; padding: 3px 5px; margin-bottom: 3px; background-color: var(--primary-color); color: white; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 600px; position: relative; }
+        .close-btn { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
+        
+        #assessment-details-list .item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        #assessment-details-list .item:last-child { border-bottom: none; }
+        #assessment-details-list .content { flex-grow: 1; }
+        #assessment-details-list .content p { margin: 2px 0; }
+        #assessment-details-list .content .subject { font-weight: bold; }
+        #assessment-details-list .actions button { margin-left: 5px; padding: 3px 8px; cursor: pointer; border-radius: 4px; border: 1px solid #ccc; }
+        #assessment-details-list .item-image {
+            max-width: 100%;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        
+        #add-assessment-btn { display: block; width: 100%; padding: 10px; margin-top: 20px; background-color: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        #assessment-form-container { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+        #assessment-form { display: flex; flex-direction: column; gap: 10px; }
+        #assessment-form input, #assessment-form textarea { padding: 10px; border-radius: 4px; border: 1px solid #ccc; font-size: 1em; }
+        #form-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+        #form-buttons button { padding: 8px 15px; border-radius: 4px; border: none; cursor: pointer; }
+        #save-btn { background-color: #28a745; color: white; }
+        #cancel-btn { background-color: #6c757d; color: white; }
+
+        @font-face {
+            font-family: 'Paperozi';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-7Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-display: swap;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 class="fonted">2학년 10반 수행평가 및 일정!</h1>
+        <!-- 달력 -->
+        <div id="calendar-container">
+            <div class="calendar-header">
+                <button id="prev-month-btn">&lt; 이전 달</button>
+                <h2 id="month-year" class="fonted"></h2>
+                <button id="next-month-btn">다음 달 &gt;</button>
+            </div>
+            <div class="calendar-grid">
+                <div class="day-name">일</div><div class="day-name">월</div><div class="day-name">화</div><div class="day-name">수</div><div class="day-name">목</div><div class="day-name">금</div><div class="day-name">토</div>
+            </div>
+            <div class="calendar-grid" id="calendar-body"></div>
+        </div>
+    </div>
+    
+    <!-- 수행평가 목록 및 입력을 위한 모달 -->
+    <div id="details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2 id="modal-date-title"></h2>
+            <div id="assessment-details-list"></div>
+            <button id="add-assessment-btn">새 수행평가 추가</button>
+            <div id="assessment-form-container">
+                <h3>수행평가 입력/수정</h3>
+                <form id="assessment-form">
+                    <input type="hidden" id="assessment-id">
+                    <input type="number" id="assessment-period" placeholder="교시" required>
+                    <input type="text" id="assessment-subject" placeholder="과목" required>
+                    <textarea id="assessment-description" rows="3" placeholder="내용" required></textarea>
+                    <input type="file" id="assessment-image" accept="image/*">
+                    <div id="form-buttons">
+                        <button type="button" id="cancel-btn">취소</button>
+                        <button type="submit" id="save-btn">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (Software Development Kit) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+    <script src="app.js"></script>
+    
+</body>
+</html>
