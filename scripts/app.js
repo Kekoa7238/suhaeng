@@ -106,10 +106,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'item';
             const imageHTML = (item && item.imageUrl) ? `<img src="${item.imageUrl}" class="item-image" alt="수행평가 이미지">` : '';
+            const formattedDescription = item.description ? item.description.replace(/\n/g, '<br>') : '';
             itemDiv.innerHTML = `
                 <div class="content">
                     <p><span class="subject">${item.period}교시: ${item.subject}</span></p>
-                    <p>${item.description}</p>
+                    <p>${formattedDescription}</p>
                     ${imageHTML}
                 </div>
                 <div class="actions">
